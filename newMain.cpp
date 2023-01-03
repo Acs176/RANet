@@ -41,13 +41,19 @@ struct RANet{
     }
 
     Matrix predict(const Matrix& XT, const Matrix& YT){
-        Matrix currentInput = XT;
+        Matrix X = XT;
         Matrix LastOutput(YT.rows(), YT.cols());
         for(auto it{W_.begin()}; it != W_.end(); it++){
-            auto output = currentInput*(*it);
-            currentInput = output;
-            if(it+1 == W_.end())
-                LastOutput = output;
+            auto S = X*(*it);                               // ESTA MAL, PILLA SIEMPRE EL X DE FUERA
+            auto THETA = relu(S);                           // CONVIENE APLICAR FUNCION DE ACTIVACION POR CAPA
+            auto X = add_column_of_ones(THETA);              // add column if output is not last
+            if(it+1 == W_.end()){
+                LastOutput = THETA;
+                std::cout << "Last output aqui\n";
+            }
+                
+            std::cout << "X OUTPUT\n";
+            std::cout << X;    
         }
         // output se compara con Y
         std::cout << LastOutput << '\n';
@@ -94,5 +100,6 @@ int main(){
     //RANet net({2,2,1});
     //net.outputWeights();
     test_net();
+    
     return 0;
 }

@@ -31,10 +31,12 @@ struct Matrix{
     [[nodiscard]] Matrix operator!=(const Matrix &MR) const;
     friend std::ostream& operator<<(std::ostream& out, Matrix const& M);
     friend Matrix sign(Matrix const& M);
+    friend Matrix relu(Matrix const& M);
     friend Matrix sum_by_cols(Matrix const& M);
     void fillWithRandoms(double const min, double const max);
     auto cols() const {return w_;}
     auto rows() const {return h_;}
+    friend Matrix add_column_of_ones(Matrix const& M);
     std::size_t size() const {return w_*h_;}
     private:
         std::size_t const h_{}, w_{};

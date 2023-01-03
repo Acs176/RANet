@@ -178,6 +178,23 @@ Matrix Matrix::operator*(const Matrix &MR) const{
     return Res;
 }
 //////////////////////////////////////
+Matrix add_column_of_ones(const Matrix& M){
+    Matrix output(M.rows(), M.cols()+1);
+
+    for(std::size_t row=0; row < output.rows(); row++){
+        for(std::size_t col=0; col < output.cols(); col++){
+            if(col>0){
+                output[row,col] = M[row,col-1];
+            }
+            else{
+                output[row,col] = 1;
+            }
+            
+        }
+    }
+    return output;
+}
+//////////////////////////////////////
 Matrix sign(Matrix const& M){
     Matrix Res(M.rows(), M.cols());
 
@@ -186,6 +203,20 @@ Matrix sign(Matrix const& M){
 
             if(M[r,c] >=0)  {Res[r,c] =  1.0;}
             else            {Res[r,c] = -1.0;}
+        }
+    }
+
+    return Res;
+}
+//////////////////////////////////////
+Matrix relu(Matrix const& M){
+    Matrix Res(M.rows(), M.cols());
+
+    for(std::size_t r=0; r<M.rows(); r++){
+        for(std::size_t c=0; c<M.cols(); c++){
+
+            if(M[r,c] < 0)  {Res[r,c] =  0;}
+            else            {Res[r,c] = M[r,c];}
         }
     }
 
