@@ -33,13 +33,36 @@ struct RANet{
     }
 
     void train(const Matrix& X_train, const Matrix& y_train){
+
         // forwardfeeding
+            // LAYER 1
+        auto firstLayerWeights = *(W_.begin());
+        auto X_0 = X_train;
+        auto S_1 = X_0 * firstLayerWeights;
+        auto X_1 = relu(S_1);                               // conviene aplicar activacion por capa
+            // LAYER 2
+        auto secondLayerWeights = *(W_.begin() + 1);
+        auto S_2 = X_1 * secondLayerWeights;
+        auto X_2 = relu(S_2);
+            // LAYER ...
+
+        // en bucle
+        auto firstLayerWeights = *(W_.begin());
+        auto X_0 = X_train;
+        auto S_k = X_0 * firstLayerWeights;
+        auto X_k = relu(S_k);  
+
+        for(auto it{W_.begin()+1}; it != W_.end(); it++){
+            // se necesita un metodo resize??? nu cumprendu
+        } 
         // ##
         // backpropagation (con derivadas y demas)
         // ##
         // gradient descent
     }
+    
 
+    // NECESITA UN VISTAZO GORDO EL TEMA DE LA X
     Matrix predict(const Matrix& XT, const Matrix& YT){
         Matrix X = XT;
         Matrix LastOutput(YT.rows(), YT.cols());
