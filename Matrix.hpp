@@ -32,6 +32,9 @@ struct Matrix{
     friend std::ostream& operator<<(std::ostream& out, Matrix const& M);
     friend Matrix sign(Matrix const& M);
     friend Matrix relu(Matrix const& M);
+    friend Matrix tanh(Matrix const& M);
+    friend Matrix derivada_tanh(Matrix const& M);
+    friend Matrix derivada_error(Matrix const& Y, Matrix const& OUT);
     friend Matrix sum_by_cols(Matrix const& M);
     void fillWithRandoms(double const min, double const max);
     auto cols() const {return w_;}

@@ -12,6 +12,7 @@
 #include <cassert>
 #include "Matrix.hpp"
 #include <random>
+#include <cmath>
 
 template <typename T>
 using initL = std::initializer_list<T>;
@@ -135,7 +136,7 @@ void Matrix::fillWithRandoms(const double min, const double max){
     for(std::size_t row=0; row<rows(); row++){
         for(std::size_t col=0; col<cols(); col++){
             double random = get_random(min,max);
-            std::cout << random << std::endl;
+            
             data_[row*w_ + col] = random; 
         }
     }
@@ -220,5 +221,43 @@ Matrix relu(Matrix const& M){
         }
     }
 
+    return Res;
+}
+
+Matrix tanh(Matrix const& M){
+    Matrix Res(M.rows(), M.cols());
+
+    for(std::size_t r=0; r<M.rows(); r++){
+        for(std::size_t c=0; c<M.cols(); c++){
+
+            Res[r,c] = tanh(M[r,c]);
+        }
+    }
+
+    return Res;
+}
+
+Matrix derivada_tanh(Matrix const& M){
+    Matrix Res(M.rows(), M.cols());
+
+    for(std::size_t r=0; r<M.rows(); r++){
+        for(std::size_t c=0; c<M.cols(); c++){
+
+            Res[r,c] = 1 - pow(tanh(M[r,c]), 2);
+        }
+    }
+
+    return Res;
+}
+
+Matrix derivada_error(Matrix const& Y, Matrix const& OUT){
+    assert(Y.cols() == OUT.cols() && Y.rows() == OUT.rows());
+    Matrix Res(Y.rows(), Y.cols());
+    for(std::size_t r=0; r<Y.rows(); r++){
+        for(std::size_t c=0; c<Y.cols(); c++){
+
+            Res[r,c] = 2 *(OUT[r,c] - Y[r,c]);
+        }
+    }
     return Res;
 }
