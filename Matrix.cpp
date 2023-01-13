@@ -131,6 +131,18 @@ Matrix sum_by_cols(Matrix const& MR){
     return Res;
 }
 //////////////////////////////////////
+Matrix sum_by_rows(Matrix const& MR){
+    Matrix Res(MR.rows(), 1);
+
+    for(std::size_t r=0; r<MR.rows(); r++){
+        for(std::size_t c=0; c<MR.cols(); c++){
+            Res[r,0] += MR[r,c];
+        }
+        
+    }
+    return Res;
+}
+//////////////////////////////////////
 void Matrix::fillWithRandoms(const double min, const double max){
     auto Matrix = *this;
     for(std::size_t row=0; row<rows(); row++){
@@ -257,6 +269,87 @@ Matrix derivada_error(Matrix const& Y, Matrix const& OUT){
         for(std::size_t c=0; c<Y.cols(); c++){
 
             Res[r,c] = 2 *(OUT[r,c] - Y[r,c]);
+        }
+    }
+    return Res;
+}
+
+Matrix Matrix::operator-(const Matrix &MR) const{
+    if(rows() != MR.rows() || cols() != MR.cols()) throw std::out_of_range("[Matrix::operator-] Cannot substract because sizes are not equal ");
+    Matrix Res(rows(), MR.cols());
+
+    auto& ML = *this; // Matrix Left
+    for(std::size_t r=0; r < ML.rows(); r++){
+        for(std::size_t c=0; c < MR.cols(); c++){  
+            Res[r,c] = ML[r,c] - MR[r,c]; 
+        }
+    }
+
+    return Res;
+}
+
+Matrix Matrix::operator+(const Matrix &MR) const{
+    if(rows() != MR.rows() || cols() != MR.cols()) throw std::out_of_range("[Matrix::operator+] Cannot add because sizes are not equal ");
+    Matrix Res(rows(), MR.cols());
+
+    auto& ML = *this; // Matrix Left
+    for(std::size_t r=0; r < ML.rows(); r++){
+        for(std::size_t c=0; c < MR.cols(); c++){  
+            Res[r,c] = ML[r,c] + MR[r,c]; 
+        }
+    }
+
+    return Res;
+}
+
+Matrix Matrix::operator*(const double &d) const{
+    Matrix Res(rows(), cols());
+
+    auto& ML = *this; // Matrix Left
+    for(std::size_t r=0; r < ML.rows(); r++){
+        for(std::size_t c=0; c < ML.cols(); c++){  
+            Res[r,c] = ML[r,c] * d; 
+        }
+    }
+
+    return Res;
+}
+
+Matrix transpose(Matrix const& M){
+    Matrix Res(M.cols(), M.rows());
+
+    for(std::size_t r=0; r<Res.rows(); r++){
+        for(std::size_t c=0; c<Res.cols(); c++){
+
+            Res[r,c] = M[c,r];
+        }
+    }
+
+    return Res;
+}
+
+Matrix getRow(Matrix const& M, std::size_t row){
+    Matrix Res(1, M.cols());
+
+    for(std::size_t c=0; c<M.cols(); c++){
+        Res[0,c] = M[row,c];
+    }
+    return Res;
+}
+
+Matrix removeRow(Matrix const& M, std::size_t row){
+    assert(M.rows() > 1);
+    Matrix Res(M.rows()-1, M.cols());
+    int offset=0;
+    for(std::size_t r=0; r<M.rows(); r++){
+        for(std::size_t c=0; c<M.cols(); c++){
+            if(r == row){
+                offset=1;
+            }
+            if(r != row){
+                Res[r-offset,c] = M[r,c];
+            }
+            
         }
     }
     return Res;
