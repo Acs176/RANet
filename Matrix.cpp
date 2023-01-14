@@ -315,6 +315,20 @@ Matrix Matrix::operator*(const double &d) const{
     return Res;
 }
 
+Matrix Matrix::elementProduct(const Matrix &MR) const{
+    if(rows() != MR.rows() || cols() != MR.cols()) throw std::out_of_range("[Matrix::elementProduct] Cannot multiply because sizes are not equal ");
+    Matrix Res(MR.rows(), MR.cols());
+
+    auto& ML = *this;
+    for(std::size_t r=0; r < MR.rows(); r++){
+        for(std::size_t c=0; c < MR.cols(); c++){
+            Res[r, c] = ML[r,c] * MR[r,c];
+        }
+    }
+
+    return Res;
+}
+
 Matrix transpose(Matrix const& M){
     Matrix Res(M.cols(), M.rows());
 

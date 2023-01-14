@@ -32,6 +32,7 @@ struct Matrix{
     [[nodiscard]] Matrix operator!=(const Matrix &MR) const;
     [[nodiscard]] Matrix operator-(const Matrix &MR) const;
     [[nodiscard]] Matrix operator+(const Matrix &MR) const;
+    Matrix elementProduct(const Matrix &MR) const;
     friend std::ostream& operator<<(std::ostream& out, Matrix const& M);
     friend Matrix sign(Matrix const& M);
     friend Matrix relu(Matrix const& M);
