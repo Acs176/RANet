@@ -214,7 +214,7 @@ Matrix sign(Matrix const& M){
     for(std::size_t r=0; r<M.rows(); r++){
         for(std::size_t c=0; c<M.cols(); c++){
 
-            if(M[r,c] >=0)  {Res[r,c] =  1.0;}
+            if(M[r,c] >0)  {Res[r,c] =  1.0;}
             else            {Res[r,c] = -1.0;}
         }
     }
