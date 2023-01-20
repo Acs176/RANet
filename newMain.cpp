@@ -13,12 +13,13 @@
 #include <random>
 #include <cmath>
 #include "Matrix.hpp"
+#include "RANet.hpp"
 
-struct RANet{
+/*struct RANet{
     using InitL = std::initializer_list<uint32_t>;
 
     RANet(InitL arch){
-        lr = 0.1;
+        lr = 0.001;
 
         assert(arch.size() >= 2);
         W_.reserve(arch.size() -1);
@@ -72,15 +73,17 @@ struct RANet{
         Matrix deltaFinal = ((salidas.back() - y_train) * 2 ).elementProduct(derivada_tanh(vector_S.back()));
         //std::cout << deltaFinal.rows() << ", " << deltaFinal.cols() << '\n';
         vector_deltas.emplace_back(deltaFinal);
-
+        //std::cout << deltaFinal;
         auto it_deltas = vector_deltas.begin();
         auto it_S = vector_S.end() - 2;
         for(auto it{W_.end()-1}; it != W_.begin(); it--){
             Matrix weights_without_ones = removeRow((*it), 0);
             Matrix& delta_siguiente = *it_deltas;
             Matrix current_S = *it_S;
+            //std::cout << "Señales :\n" << derivada_tanh(current_S) << "\n";
             //std::cout << weights_without_ones.rows() << ", " << weights_without_ones.cols()<< ", " << derivada_tanh(current_S).rows() << ", " << derivada_tanh(current_S).cols() <<  '\n';
             Matrix delta = (delta_siguiente * transpose(weights_without_ones) ).elementProduct(derivada_tanh(current_S));
+            //std::cout << delta;
             vector_deltas.emplace_back(delta);
             it_deltas = vector_deltas.end() - 1;
             it_S--;
@@ -97,13 +100,14 @@ struct RANet{
         for(auto it{W_.end()-1}; it >= W_.begin(); it--){
             Matrix& New_Weights = *it;
             Matrix& delta = *it_deltas;
+            //std::cout << "Deltas: \n" << delta << "\n";
+            //std::cout << "Pesos antes: \n" << New_Weights << "\n";
             //std::cout << delta.rows() << ", " << delta.cols()<< ", " << it_salidas->rows() << ", " << it_salidas->cols() <<  '\n';
             New_Weights = New_Weights - ( ( transpose((*it_salidas)) * delta ) * lr );
+            //std::cout << "Pesos después: \n" << New_Weights << "\n";
             it_salidas--;
             it_deltas++;
-
         }
-
         
         
     }
@@ -152,7 +156,7 @@ private:
     double lr;
 
 
-};
+};*/
 
 std::vector<std::vector<double>> readFile(std::string filename){
     std::vector<std::vector<double>> content;
@@ -225,27 +229,27 @@ void test_net(){
         }
     }
 
-    for(std::size_t i = 0; i<X.rows(); i++){
+    /*for(std::size_t i = 0; i<X.rows(); i++){
         for(std::size_t j = 1; j<X.cols(); j++){
             X[i,j] = (X[i,j] - min_X[j])/(max_X[j]-min_X[j]);
         }
-    }
-
+    }*/
+    std::cout << sum_by_cols(Y);
     //std::cout << X;
     //std::cout << Y;
 
     RANet net({9, 9, 3});
-
+    
     //net.outputWeights();
-    //net.train(X, Y);
+    net.train(X, Y);
+    // net.train(X, Y);
+    //net.outputWeights();
     // net.train(X, Y);
     // net.outputWeights();
-    // net.train(X, Y);
-    // net.outputWeights();
-    for(int i =0; i<1000; i++){
+    for(int i =0; i<100; i++){
         net.train(X,Y);
+        //net.outputWeights();
     }
-
     Matrix H = net.predict(X);
     std::cout << H;
     Matrix Error = H != sign(Y);
