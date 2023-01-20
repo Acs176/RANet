@@ -5,8 +5,8 @@
 #include <fstream>
 #include <string.h>
 #include <sstream>
-//#include "Matrix.hpp"
-//#include "RANet.hpp"
+#include "Matrix.hpp"
+#include "RANet.hpp"
 
 // Global vars
 const int maxSteps = 7500;
@@ -16,7 +16,7 @@ ALEInterface alei;
 
 void play(){
    auto* RAM{alei.getRAM().array()};
-   /*Matrix X = {{1, (float)RAM[6], (float)RAM[85], (float)RAM[26],(float)RAM[81], (float)RAM[82], (float)RAM[83],(float)RAM[84] ,(float)RAM[30], (float)RAM[28]}};
+   Matrix X = {{1, (float)RAM[6], (float)RAM[85], (float)RAM[26],(float)RAM[81], (float)RAM[82], (float)RAM[83],(float)RAM[84] ,(float)RAM[30], (float)RAM[28]}};
    RANet net({9, 9, 3});   
    net.setWeights(Matrix{{0.0536307, -0.981177, 0.282775, 0.385805, 0.244212, 0.0933811, -0.867564, -0.576487, 0.485852},
                          {-0.350331, 0.825374, 0.794923, 0.516568, 0.241684, 0.574206, -0.298815, 0.409221, -0.571367 },
@@ -39,8 +39,24 @@ void play(){
                          {2.83195, 2.30407, -1.11569}, 
                          {-2.48127, -0.807404, 1.056}}, 1);
 
-   net.predict(X);*/
-
+   auto Y = net.predict(X);
+   std::cout << Y << "\n";
+   if(Y[0,0] == 1 && Y[0,1] == 1){
+      alei.act(PLAYER_A_RIGHTFIRE);
+   }else
+   if(Y[0,0] == 1 && Y[0,2] == 1){
+      alei.act(PLAYER_A_LEFTFIRE);
+   }else
+   if(Y[0,0] == 1){
+      alei.act(PLAYER_A_FIRE);
+   }else
+   if(Y[0,1] == 1){
+      alei.act(PLAYER_A_RIGHT);
+   }else if(Y[0,2] == 1){
+      alei.act(PLAYER_A_LEFT);
+   }else{
+      alei.act(PLAYER_A_NOOP);
+   }
 
 }
 
