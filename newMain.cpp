@@ -14,151 +14,97 @@
 #include <cmath>
 #include "Matrix.hpp"
 #include "RANet.hpp"
+#include <algorithm>
+using InitL = std::initializer_list<uint32_t>;
 
-/*struct RANet{
-    using InitL = std::initializer_list<uint32_t>;
 
-    RANet(InitL arch){
-        lr = 0.001;
+struct solution{
+    RANet net;
+    std::size_t errors;
 
-        assert(arch.size() >= 2);
-        W_.reserve(arch.size() -1);
+};
 
-        uint32_t inputs = *(arch.begin());
-        assert(inputs > 0);
-        for(auto it{arch.begin() +1}; it != arch.end(); ++it){
-            uint32_t outputs = *it;
-            assert(outputs > 0);
-            Matrix& W_Matrix = W_.emplace_back(inputs +1, outputs); // construye implicitamente una Matrix(inputs +1, outputs)
-            W_Matrix.fillWithRandoms(-1, 1); // entre el numero maximo de entradas
-            inputs = outputs;
-        }
+int get_random_int(int const min, int const max){
+    static std::random_device dev;
+    static std::mt19937 gen{dev()};     // si son static, solo se inicializan la primera vez que se llama a la funcion
+
+    return std::uniform_int_distribution<int>{min,max}(gen);
+
+}
+
+double get_random_double(double const min, double const max){
+    static std::random_device dev;
+    static std::mt19937 gen{dev()};     // si son static, solo se inicializan la primera vez que se llama a la funcion
+
+    return std::uniform_real_distribution<double>{min,max}(gen);
+
+}
+
+RANet trainGenetic(const Matrix& X, const Matrix& Y, std::size_t iterations, InitL net_parameters){
+
+    int total_nets    = 1000;
+    int cantidad_best = 100;
+
+    std::vector<solution> solutions;
+    std::vector<solution> best_solutions;
+    for(std::size_t i=0; i<total_nets; i++){
+        RANet new_net(net_parameters);
+        solution s{new_net, X.rows()};
+        solutions.push_back(s);
     }
 
-    void train(const Matrix& X_train, const Matrix& y_train){
+    for(std::size_t i=0; i<iterations; i++){
 
-        //crear vector de X
-        std::vector<Matrix> salidas;
-        std::vector<Matrix> vector_S;
+        // calcular fitness 
 
-        salidas.push_back(X_train);
-        for(auto it{W_.begin()}; it != W_.end(); it++){
-            if(it+1 == W_.end())
-                salidas.emplace_back(X_train.rows(), it->cols());
-            else
-                salidas.emplace_back(X_train.rows(), it->cols()+1);
-        }
-        assert(salidas.size() == (W_.size() + 1));
+        for(auto& s : solutions){
+            auto H = s.net.predict(X);
+            Matrix Error = H != sign(Y);
+            auto score = sum_by_cols(Error);
+            auto score_sum = sum_by_rows(score)[0,0];
 
-        for(std::size_t i=0; i<W_.size(); i++){
+            s.errors = score_sum;
 
-            auto S = salidas[i] * W_[i];
-            vector_S.emplace_back(S);                               
-            //auto THETA = tanh(S);                          
-            auto THETA = tanh(S);
-            if(i+1 >= W_.size())
-                salidas[i+1] = THETA;
-            else
-                salidas[i+1] = add_column_of_ones(THETA);              // add column if output is not last
         }
 
-        // ##
-        // backpropagation (con derivadas y demas)
-        // ##
 
-        std::vector<Matrix> vector_deltas;
-        
+        // sort
+        std::sort(solutions.begin(), solutions.end(),
+        [](const auto& left, const auto& right){
+            return left.errors < right.errors;
+        }
+        );
 
-        // calcular deltas
-        //std::cout << salidas.back().rows() << ", " << salidas.back().cols()<< ", " << derivada_tanh(vector_S.back()).rows() << ", " << derivada_tanh(vector_S.back()).cols() <<  '\n';
-        Matrix deltaFinal = ((salidas.back() - y_train) * 2 ).elementProduct(derivada_tanh(vector_S.back()));
-        std::cout << derivada_tanh(vector_S.back());    
-        //std::cout << deltaFinal.rows() << ", " << deltaFinal.cols() << '\n';
-        vector_deltas.emplace_back(deltaFinal);
-        //std::cout << deltaFinal;
-        auto it_deltas = vector_deltas.begin();
-        auto it_S = vector_S.end() - 2;
-        for(auto it{W_.end()-1}; it != W_.begin(); it--){
-            Matrix weights_without_ones = removeRow((*it), 0);
-            Matrix& delta_siguiente = *it_deltas;
-            Matrix current_S = *it_S;
-            //std::cout << "Señales :\n" << derivada_tanh(current_S) << "\n";
-            //std::cout << weights_without_ones.rows() << ", " << weights_without_ones.cols()<< ", " << derivada_tanh(current_S).rows() << ", " << derivada_tanh(current_S).cols() <<  '\n';
-            Matrix delta = (delta_siguiente * transpose(weights_without_ones) ).elementProduct(derivada_tanh(current_S));
-            //std::cout << delta;
-            vector_deltas.emplace_back(delta);
-            it_deltas = vector_deltas.end() - 1;
-            it_S--;
+        if( i+1 >= iterations){
+            return solutions[0].net;
         }
 
-        // for(it_deltas = vector_deltas.end() - 1; it_deltas >= vector_deltas.begin(); it_deltas--){
-        //     std::cout << "DELTAAA\n";
-        //     std::cout << (*it_deltas) << '\n';
-        // }
-        // actualizar pesos
+        // pillar mejores
 
-        it_deltas = vector_deltas.begin();
-        auto it_salidas = salidas.end() - 2;
-        for(auto it{W_.end()-1}; it >= W_.begin(); it--){
-            Matrix& New_Weights = *it;
-            Matrix& delta = *it_deltas;
-            //std::cout << "Deltas: \n" << delta << "\n";
-            //std::cout << "Pesos antes: \n" << New_Weights << "\n";
-            //std::cout << delta.rows() << ", " << delta.cols()<< ", " << it_salidas->rows() << ", " << it_salidas->cols() <<  '\n';
-            New_Weights = New_Weights - ( ( transpose((*it_salidas)) * delta ) * lr );
-            //std::cout << "Pesos después: \n" << New_Weights << "\n";
-            it_salidas--;
-            it_deltas++;
+        std::copy(
+            solutions.begin(),
+            solutions.begin() + cantidad_best,
+            std::back_inserter(best_solutions)
+        );
+        solutions.clear();
+
+        std::for_each(best_solutions.begin(), best_solutions.end(), [&](auto& s){
+            for(auto& w : s.net.W_){
+                w = w * get_random_double(0.95, 1.05);
+            }
+        });
+
+        // volver a generar
+        for(int new_i=0; new_i<total_nets; new_i++){
+            solutions.push_back(solution{
+                best_solutions[get_random_int(0, cantidad_best-1)].net,
+                X.rows()
+            });
         }
-        
-        
+        best_solutions.clear();
     }
-    
 
-    Matrix predict(const Matrix& XT){
-
-        //crear vector de X
-        std::vector<Matrix> salidas;
-
-
-        salidas.push_back(XT);
-        for(auto it{W_.begin()}; it != W_.end(); it++){
-            if(it+1 == W_.end())
-                salidas.emplace_back(XT.rows(), it->cols());
-            else
-                salidas.emplace_back(XT.rows(), it->cols()+1);
-        }
-        assert(salidas.size() == (W_.size() + 1));
-
-        for(std::size_t i=0; i<W_.size(); i++){
-
-            auto S = salidas[i] * W_[i];                               // ESTA MAL, PILLA SIEMPRE EL X DE FUERA
-            //auto THETA = tanh(S);                           // CONVIENE APLICAR FUNCION DE ACTIVACION POR CAPA
-            auto THETA = tanh(S);
-            if(i+1 >= W_.size())
-                salidas[i+1] = THETA;
-            else
-                salidas[i+1] = add_column_of_ones(THETA);              // add column if output is not last
-        }
-        // output se compara con Y
-        //std::cout << "SALIDA ANTES DE SIGN\n";
-        //std::cout << salidas.back() << '\n';
-        return sign(salidas.back());
-    }
-    void outputWeights(){
-        std::cout << "WEIGHTS IN THE NEURAL NET\n:";
-        std::cout << "#######################\n";
-        for(auto it = W_.begin(); it != W_.end(); ++it){
-            std::cout << *it << '\n';
-            std::cout << "#######################\n";
-        }
-    }
-private:
-    std::vector<Matrix> W_{};
-    double lr;
-
-
-};*/
+}
 
 std::vector<std::vector<double>> readFile(std::string filename){
     std::vector<std::vector<double>> content;
@@ -202,86 +148,79 @@ std::vector<std::vector<double>> readFile(std::string filename){
 }
 
 void test_net(){
-    // std::vector<std::vector<double>> a = readFile("reducedData.csv");
-    // Matrix X(a.size(), a[0].size()-3);
-    // Matrix Y(a.size(), 3);
-    // std::vector<double> max_X;
-    // std::vector<double> min_X;
-    // max_X.resize(a[0].size()-3);
-    // min_X.resize(a[0].size()-3);
+    std::vector<std::vector<double>> a = readFile("reducedData.csv");
+    Matrix X(a.size(), a[0].size()-3);
+    Matrix Y(a.size(), 3);
+    std::vector<double> max_X;
+    std::vector<double> min_X;
+    max_X.resize(a[0].size()-3);
+    min_X.resize(a[0].size()-3);
 
-    // for(int i = 0; i<max_X.size(); i++){
-    //     max_X[i] = -1;
-    //     min_X[i] = 100000;
-    // }
-    // for(std::size_t i = 0; i<a.size(); i++){
-    //     for(std::size_t j = 0; j<a[i].size(); j++){
-    //         if(j<a[0].size()-3){
-    //             X[i,j] = a[i][j];
-    //             if(X[i,j] > max_X[j]){
-    //                 max_X[j] = X[i,j];
-    //             }
-    //             if(X[i,j] < min_X[j]){
-    //                 min_X[j] = X[i,j];
-    //             }
-    //         }
-    //         else{
-    //             Y[i,a[i].size()-j-1] = a[i][j];
-    //         }
-    //     }
-    // }
+    for(int i = 0; i<max_X.size(); i++){
+        max_X[i] = -1;
+        min_X[i] = 100000;
+    }
+    for(std::size_t i = 0; i<a.size(); i++){
+        for(std::size_t j = 0; j<a[i].size(); j++){
+            if(j<a[0].size()-3){
+                X[i,j] = a[i][j];
+                if(X[i,j] > max_X[j]){
+                    max_X[j] = X[i,j];
+                }
+                if(X[i,j] < min_X[j]){
+                    min_X[j] = X[i,j];
+                }
+            }
+            else{
+                Y[i,a[i].size()-j-1] = a[i][j];
+            }
+        }
+    }
 
-    // for(std::size_t i = 0; i<X.rows(); i++){
-    //     for(std::size_t j = 1; j<X.cols(); j++){
-    //         X[i,j] = (X[i,j] - min_X[j])/(max_X[j]-min_X[j]);
-    //     }
-    // }
+    for(std::size_t i = 0; i<X.rows(); i++){
+        for(std::size_t j = 1; j<X.cols(); j++){
+            X[i,j] = (X[i,j] - min_X[j])/(max_X[j]-min_X[j]);
+        }
+    }
 
-    //std::cout << X;
-    //std::cout << Y;
-
-    RANet net({3, 9, 1});
 
     /// XOR
-    Matrix X {{1, -1,-1,-1},
-              {1, -1,-1,1},
-              {1, -1,1,-1},
-              {1, -1,1,1},
-              {1, 1,-1,-1},
-              {1, 1,-1,1},
-              {1, 1,1,-1},
-              {1, 1,1,1}
-              };
+    // Matrix X {{1, -1,-1,-1},
+    //           {1, -1,-1,1},
+    //           {1, -1,1,-1},
+    //           {1, -1,1,1},
+    //           {1, 1,-1,-1},
+    //           {1, 1,-1,1},
+    //           {1, 1,1,-1},
+    //           {1, 1,1,1}
+    //           };
 
-    Matrix Y {{-1},
-              {1},
-              {1},
-              {-1},
-              {1},
-              {-1},
-              {-1},
-              {-1}
-    };
+    // Matrix Y {{-1},
+    //           {1},
+    //           {1},
+    //           {-1},
+    //           {1},
+    //           {-1},
+    //           {-1},
+    //           {-1}
+    // };
 
+    RANet red_tocha = trainGenetic(X,Y,5, {9,9,3});
     //net.outputWeights();
     // net.train(X, Y);
     // net.outputWeights();
     // net.train(X, Y);
-    net.outputWeights();
-    for(int i =0; i<50; i++){
-        net.train(X,Y);
-        //net.outputWeights();
-    }
-    Matrix H = net.predict(X);
+    red_tocha.outputWeights();
+
+    Matrix H = red_tocha.predict(X);
     std::cout << H;
     Matrix Error = H != sign(Y);
     auto score = sum_by_cols(Error);
     std::cout << score << '\n';
-    net.outputWeights();
+    //red_tocha.outputWeights();
 }
 
 int main(){
-
 
     test_net();
     

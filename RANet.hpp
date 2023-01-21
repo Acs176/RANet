@@ -19,9 +19,12 @@ struct RANet{
         RANet(InitL arch);
         Matrix predict(const Matrix& XT);
         void train(const Matrix& X_train, const Matrix& y_train);
+        void trainGenetic(const Matrix& X, const Matrix& Y, std::size_t iterations);
         void outputWeights();
         void setWeights(Matrix X, size_t capa);
-    private:
+        
         std::vector<Matrix> W_{};
+    private:
+        
         double lr;
 };

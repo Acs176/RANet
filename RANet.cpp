@@ -28,7 +28,7 @@ RANet::RANet(InitL arch){
         uint32_t outputs = *it;
         assert(outputs > 0);
         Matrix& W_Matrix = W_.emplace_back(inputs +1, outputs); // construye implicitamente una Matrix(inputs +1, outputs)
-        W_Matrix.fillWithRandoms(-1, 1); // entre el numero maximo de entradas
+        W_Matrix.fillWithRandoms(-5, 5); // entre el numero maximo de entradas
         inputs = outputs;
     }
 }
