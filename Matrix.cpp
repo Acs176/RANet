@@ -228,8 +228,8 @@ Matrix relu(Matrix const& M){
     for(std::size_t r=0; r<M.rows(); r++){
         for(std::size_t c=0; c<M.cols(); c++){
 
-            if(M[r,c] < 0)  {Res[r,c] =  0;}
-            else            {Res[r,c] = M[r,c];}
+            if(M[r,c] > 0)  {Res[r,c] =  M[r,c];}
+            else            {Res[r,c] = 0.2 * M[r,c];}
         }
     }
 
@@ -367,4 +367,18 @@ Matrix removeRow(Matrix const& M, std::size_t row){
         }
     }
     return Res;
+}
+
+Matrix derivada_relu(Matrix const& M){
+    Matrix Res(M.rows(), M.cols());
+
+    for(std::size_t r=0; r<M.rows(); r++){
+        for(std::size_t c=0; c<M.cols(); c++){
+
+            if(M[r,c] < 0)  {Res[r,c] =  0.2;}
+            else            {Res[r,c] = 1;}
+        }
+    }
+
+    return Res;   
 }

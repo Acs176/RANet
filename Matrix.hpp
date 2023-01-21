@@ -38,6 +38,7 @@ struct Matrix{
     friend Matrix relu(Matrix const& M);
     friend Matrix tanh(Matrix const& M);
     friend Matrix transpose(Matrix const& M);
+    friend Matrix derivada_relu(Matrix const& M);
     friend Matrix derivada_tanh(Matrix const& M);
     friend Matrix derivada_error(Matrix const& Y, Matrix const& OUT);
     friend Matrix sum_by_cols(Matrix const& M);

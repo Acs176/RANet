@@ -53,7 +53,8 @@ struct RANet{
 
             auto S = salidas[i] * W_[i];
             vector_S.emplace_back(S);                               
-            auto THETA = tanh(S);                          
+            //auto THETA = tanh(S);                          
+            auto THETA = tanh(S);
             if(i+1 >= W_.size())
                 salidas[i+1] = THETA;
             else
@@ -70,6 +71,7 @@ struct RANet{
         // calcular deltas
         //std::cout << salidas.back().rows() << ", " << salidas.back().cols()<< ", " << derivada_tanh(vector_S.back()).rows() << ", " << derivada_tanh(vector_S.back()).cols() <<  '\n';
         Matrix deltaFinal = ((salidas.back() - y_train) * 2 ).elementProduct(derivada_tanh(vector_S.back()));
+        std::cout << derivada_tanh(vector_S.back());    
         //std::cout << deltaFinal.rows() << ", " << deltaFinal.cols() << '\n';
         vector_deltas.emplace_back(deltaFinal);
 
@@ -109,7 +111,6 @@ struct RANet{
     }
     
 
-    // NECESITA UN VISTAZO GORDO EL TEMA DE LA X
     Matrix predict(const Matrix& XT){
 
         //crear vector de X
@@ -128,7 +129,8 @@ struct RANet{
         for(std::size_t i=0; i<W_.size(); i++){
 
             auto S = salidas[i] * W_[i];                               // ESTA MAL, PILLA SIEMPRE EL X DE FUERA
-            auto THETA = tanh(S);                           // CONVIENE APLICAR FUNCION DE ACTIVACION POR CAPA
+            //auto THETA = tanh(S);                           // CONVIENE APLICAR FUNCION DE ACTIVACION POR CAPA
+            auto THETA = tanh(S);
             if(i+1 >= W_.size())
                 salidas[i+1] = THETA;
             else
@@ -196,53 +198,74 @@ std::vector<std::vector<double>> readFile(std::string filename){
 }
 
 void test_net(){
-    std::vector<std::vector<double>> a = readFile("data.csv");
-    Matrix X(a.size(), a[0].size()-3);
-    Matrix Y(a.size(), 3);
-    std::vector<double> max_X;
-    std::vector<double> min_X;
-    max_X.resize(a[0].size()-3);
-    min_X.resize(a[0].size()-3);
+    // std::vector<std::vector<double>> a = readFile("reducedData.csv");
+    // Matrix X(a.size(), a[0].size()-3);
+    // Matrix Y(a.size(), 3);
+    // std::vector<double> max_X;
+    // std::vector<double> min_X;
+    // max_X.resize(a[0].size()-3);
+    // min_X.resize(a[0].size()-3);
 
-    for(int i = 0; i<max_X.size(); i++){
-        max_X[i] = -1;
-        min_X[i] = 100000;
-    }
-    for(std::size_t i = 0; i<a.size(); i++){
-        for(std::size_t j = 0; j<a[i].size(); j++){
-            if(j<a[0].size()-3){
-                X[i,j] = a[i][j];
-                if(X[i,j] > max_X[j]){
-                    max_X[j] = X[i,j];
-                }
-                if(X[i,j] < min_X[j]){
-                    min_X[j] = X[i,j];
-                }
-            }
-            else{
-                Y[i,a[i].size()-j-1] = a[i][j];
-            }
-        }
-    }
+    // for(int i = 0; i<max_X.size(); i++){
+    //     max_X[i] = -1;
+    //     min_X[i] = 100000;
+    // }
+    // for(std::size_t i = 0; i<a.size(); i++){
+    //     for(std::size_t j = 0; j<a[i].size(); j++){
+    //         if(j<a[0].size()-3){
+    //             X[i,j] = a[i][j];
+    //             if(X[i,j] > max_X[j]){
+    //                 max_X[j] = X[i,j];
+    //             }
+    //             if(X[i,j] < min_X[j]){
+    //                 min_X[j] = X[i,j];
+    //             }
+    //         }
+    //         else{
+    //             Y[i,a[i].size()-j-1] = a[i][j];
+    //         }
+    //     }
+    // }
 
-    for(std::size_t i = 0; i<X.rows(); i++){
-        for(std::size_t j = 1; j<X.cols(); j++){
-            X[i,j] = (X[i,j] - min_X[j])/(max_X[j]-min_X[j]);
-        }
-    }
+    // for(std::size_t i = 0; i<X.rows(); i++){
+    //     for(std::size_t j = 1; j<X.cols(); j++){
+    //         X[i,j] = (X[i,j] - min_X[j])/(max_X[j]-min_X[j]);
+    //     }
+    // }
 
     //std::cout << X;
     //std::cout << Y;
 
-    RANet net({9, 9, 3});
+    RANet net({3, 9, 1});
+
+    /// XOR
+    Matrix X {{1, -1,-1,-1},
+              {1, -1,-1,1},
+              {1, -1,1,-1},
+              {1, -1,1,1},
+              {1, 1,-1,-1},
+              {1, 1,-1,1},
+              {1, 1,1,-1},
+              {1, 1,1,1}
+              };
+
+    Matrix Y {{-1},
+              {1},
+              {1},
+              {-1},
+              {1},
+              {-1},
+              {-1},
+              {-1}
+    };
 
     //net.outputWeights();
     //net.train(X, Y);
     // net.train(X, Y);
     // net.outputWeights();
     // net.train(X, Y);
-    // net.outputWeights();
-    for(int i =0; i<1000; i++){
+    net.outputWeights();
+    for(int i =0; i<50; i++){
         net.train(X,Y);
     }
 
